@@ -72,7 +72,7 @@ final class PSR15Middleware implements MiddlewareInterface
 
         $namespace = explode('\\', $middleware);
         $className = array_pop($namespace);
-        $newClassName = uniqid($className . '_', true);
+        $newClassName = str_replace('.', '_', uniqid($className . '_', true));
         $FQCN = implode('\\', $namespace) . '\\' . $newClassName;
         $code = str_replace('class ' . $className, 'class ' . $newClassName, $code);
         eval($code);
