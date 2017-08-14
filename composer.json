@@ -14,7 +14,7 @@
     },
     "autoload": {
         "psr-4": {
-            "FriendsOfReactPHP\\Http\\Middleware\\Psr15Adapter\\": "src"
+            "FriendsOfReact\\Http\\Middleware\\Psr15Adapter\\": "src"
         }
     },
     "require-dev": {

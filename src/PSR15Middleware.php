@@ -1,6 +1,6 @@
 <?php
 
-namespace FriendsOfReactPHP\Http\Middleware\Psr15Adapter;
+namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 
 use Interop\Http\ServerMiddleware\MiddlewareInterface as PSR15MiddlewareInterface;
 use PhpParser\Node\Expr\MethodCall;

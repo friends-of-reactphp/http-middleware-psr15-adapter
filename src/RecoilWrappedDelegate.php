@@ -1,6 +1,6 @@
 <?php
 
-namespace FriendsOfReactPHP\Http\Middleware\Psr15Adapter;
+namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Psr\Http\Message\ServerRequestInterface;
