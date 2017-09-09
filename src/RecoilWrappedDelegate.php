@@ -4,7 +4,6 @@ namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 
 use Interop\Http\ServerMiddleware\DelegateInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use React\Http\MiddlewareStackInterface;
 
 /**
  * @internal
@@ -12,21 +11,21 @@ use React\Http\MiddlewareStackInterface;
 final class RecoilWrappedDelegate implements DelegateInterface
 {
     /**
-     * @var DelegateInterface
+     * @var callable
      */
-    private $wrappedDelegate;
+    private $next;
 
     /**
-     * RecoilWrappedDelegate constructor.
-     * @param DelegateInterface $wrappedDelegate
+     * @param callable $wrappedDelegate
      */
-    public function __construct(MiddlewareStackInterface $wrappedDelegate)
+    public function __construct($next)
     {
-        $this->wrappedDelegate = $wrappedDelegate;
+        $this->next = $next;
     }
 
     public function process(ServerRequestInterface $request)
     {
-        return (yield $this->wrappedDelegate->process($request));
+        $next = $this->next;
+        return (yield $next($request));
     }
 }

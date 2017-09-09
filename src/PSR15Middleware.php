@@ -10,12 +10,10 @@ use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
-use React\Http\MiddlewareInterface;
-use React\Http\MiddlewareStackInterface;
 use React\Promise;
 use Recoil\React\ReactKernel;
 
-final class PSR15Middleware implements MiddlewareInterface
+final class PSR15Middleware
 {
     /**
      * @var ReactKernel
@@ -34,12 +32,12 @@ final class PSR15Middleware implements MiddlewareInterface
         $this->middleware = $this->buildYieldingMiddleware($middleware, $arguments);
     }
 
-    public function process(ServerRequestInterface $request, MiddlewareStackInterface $stack)
+    public function __invoke(ServerRequestInterface $request, $next)
     {
-        return new Promise\Promise(function ($resolve, $reject) use ($request, $stack) {
-            $this->kernel->execute(function () use ($resolve, $reject, $request, $stack) {
+        return new Promise\Promise(function ($resolve, $reject) use ($request, $next) {
+            $this->kernel->execute(function () use ($resolve, $reject, $request, $next) {
                 try {
-                    $response = (yield $this->middleware->process($request, new RecoilWrappedDelegate($stack)));
+                    $response = (yield $this->middleware->process($request, new RecoilWrappedDelegate($next)));
                     $resolve($response);
                 } catch (\Throwable $throwable) {
                     $reject($throwable);
