@@ -8,6 +8,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Expr\Yield_;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Promise;
@@ -25,7 +26,6 @@ final class PSR15Middleware
      */
     private $middleware;
 
-
     public function __construct(LoopInterface $loop, $middleware, array $arguments = [])
     {
         $this->kernel = ReactKernel::create($loop);
@@ -37,7 +37,11 @@ final class PSR15Middleware
         return new Promise\Promise(function ($resolve, $reject) use ($request, $next) {
             $this->kernel->execute(function () use ($resolve, $reject, $request, $next) {
                 try {
-                    $response = (yield $this->middleware->process($request, new RecoilWrappedDelegate($next)));
+                    $response = $this->middleware->process($request, new RecoilWrappedDelegate($next));
+                    if ($response instanceof ResponseInterface) {
+                        $response = Promise\resolve($response);
+                    }
+                    $response = (yield $response);
                     $resolve($response);
                 } catch (\Throwable $throwable) {
                     $reject($throwable);
