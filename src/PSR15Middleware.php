@@ -26,10 +26,16 @@ final class PSR15Middleware
      */
     private $middleware;
 
-    public function __construct(LoopInterface $loop, $middleware, array $arguments = [])
+    public function __construct(LoopInterface $loop, $middleware, array $arguments = [], callable $func = null)
     {
+        if ($func === null) {
+            $func = function ($middleware) {
+                return $middleware;
+            };
+        }
+
         $this->kernel = ReactKernel::create($loop);
-        $this->middleware = $this->buildYieldingMiddleware($middleware, $arguments);
+        $this->middleware = $this->buildYieldingMiddleware($middleware, $arguments, $func);
     }
 
     public function __invoke(ServerRequestInterface $request, $next)
@@ -50,7 +56,7 @@ final class PSR15Middleware
         });
     }
 
-    private function buildYieldingMiddleware($middleware, array $arguments)
+    private function buildYieldingMiddleware($middleware, array $arguments, callable $func)
     {
         if (!is_subclass_of($middleware, PSR15MiddlewareInterface::class)) {
             throw new \Exception('Not a PSR15 middleware');
@@ -78,7 +84,7 @@ final class PSR15Middleware
         $FQCN = implode('\\', $namespace) . '\\' . $newClassName;
         $code = str_replace('class ' . $className, 'class ' . $newClassName, $code);
         eval($code);
-        return new $FQCN(...$arguments);
+        return $func(new $FQCN(...$arguments));
     }
 
     private function iterateStmts($stmts)
