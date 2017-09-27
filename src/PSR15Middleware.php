@@ -27,7 +27,7 @@ final class PSR15Middleware
      */
     private $middleware;
 
-    public function __construct(LoopInterface $loop, $middleware, array $arguments = [], callable $func = null)
+    public function __construct(LoopInterface $loop, string $middleware, array $arguments = [], callable $func = null)
     {
         if ($func === null) {
             $func = function ($middleware) {
@@ -39,7 +39,7 @@ final class PSR15Middleware
         $this->middleware = $this->buildYieldingMiddleware($middleware, $arguments, $func);
     }
 
-    public function __invoke(ServerRequestInterface $request, $next)
+    public function __invoke(ServerRequestInterface $request, callable $next): Promise\PromiseInterface
     {
         return new Promise\Promise(function ($resolve, $reject) use ($request, $next) {
             $this->kernel->execute(function () use ($resolve, $reject, $request, $next) {
