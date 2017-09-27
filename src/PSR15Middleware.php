@@ -12,6 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Promise;
 use Recoil\React\ReactKernel;
+use Throwable;
 
 final class PSR15Middleware
 {
@@ -25,28 +26,27 @@ final class PSR15Middleware
      */
     private $middleware;
 
-
-    public function __construct(LoopInterface $loop, $middleware, array $arguments = [])
+    public function __construct(LoopInterface $loop, string $middleware, array $arguments = [])
     {
         $this->kernel = ReactKernel::create($loop);
         $this->middleware = $this->buildYieldingMiddleware($middleware, $arguments);
     }
 
-    public function __invoke(ServerRequestInterface $request, $next)
+    public function __invoke(ServerRequestInterface $request, callable $next)
     {
         return new Promise\Promise(function ($resolve, $reject) use ($request, $next) {
             $this->kernel->execute(function () use ($resolve, $reject, $request, $next) {
                 try {
                     $response = (yield $this->middleware->process($request, new RecoilWrappedDelegate($next)));
                     $resolve($response);
-                } catch (\Throwable $throwable) {
+                } catch (Throwable $throwable) {
                     $reject($throwable);
                 }
             });
         });
     }
 
-    private function buildYieldingMiddleware($middleware, array $arguments)
+    private function buildYieldingMiddleware(string $middleware, array $arguments)
     {
         if (!is_subclass_of($middleware, PSR15MiddlewareInterface::class)) {
             throw new \Exception('Not a PSR15 middleware');
@@ -55,6 +55,7 @@ final class PSR15Middleware
         foreach (get_declared_classes() as $class) {
             if (strpos($class, 'ComposerAutoloaderInit') === 0) {
                 $file = $class::getLoader()->findFile($middleware);
+                break;
             }
         }
 
@@ -77,7 +78,7 @@ final class PSR15Middleware
         return new $FQCN(...$arguments);
     }
 
-    private function iterateStmts($stmts)
+    private function iterateStmts(array $stmts): array
     {
         foreach ($stmts as &$stmt) {
             if (isset($stmt->stmts)) {
