@@ -25,6 +25,6 @@ final class PSR15MiddlewareTest extends TestCase
         $response = await($middleware($request, $next), $loop, 10);
 
         self::assertSame(200, $response->getStatusCode());
-        self::assertSame('passed', 'X-Test');
+        self::assertSame('passed', $response->getHeaderLine('X-Test'));
     }
 }
