@@ -19,15 +19,22 @@ and using the callback to call several methods on the redirect middleware to cha
 $loop = Factory::create(); 
 $server = new Server(new MiddlewareRunner([
     /** Other middleware */
-    new PSR15Middleware($loop, Redirect::class, [
-        ['/old-url' => '/new-url']
-    ], function ($redirectMiddleware) {
-        return $redirectMiddleware
-            ->permanent(false)
-            ->query(false)
-            ->method(['GET', 'POST'])
-        ;
-    }),
+    new PSR15Middleware(
+        $loop, // The react/event-loop (required) 
+        Redirect::class, // String class name of the middleware (required)
+        [ // Any constructor arguments (optional)
+            ['/old-url' => '/new-url']
+        ],
+        function ($redirectMiddleware) {
+            // This callback is optional, but when used it must return the
+            // instance passed into it, or a clone of it.
+            return $redirectMiddleware
+                ->permanent(false)
+                ->query(false)
+                ->method(['GET', 'POST'])
+            ;
+        }
+    ),
     /** Other middleware */
 ]));
 ```
