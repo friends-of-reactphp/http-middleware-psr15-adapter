@@ -8,6 +8,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Expr\Yield_;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Promise;
@@ -26,18 +27,28 @@ final class PSR15Middleware
      */
     private $middleware;
 
-    public function __construct(LoopInterface $loop, string $middleware, array $arguments = [])
+    public function __construct(LoopInterface $loop, $middleware, array $arguments = [], callable $func = null)
     {
+        if ($func === null) {
+            $func = function ($middleware) {
+                return $middleware;
+            };
+        }
+
         $this->kernel = ReactKernel::create($loop);
-        $this->middleware = $this->buildYieldingMiddleware($middleware, $arguments);
+        $this->middleware = $this->buildYieldingMiddleware($middleware, $arguments, $func);
     }
 
-    public function __invoke(ServerRequestInterface $request, callable $next)
+    public function __invoke(ServerRequestInterface $request, $next)
     {
         return new Promise\Promise(function ($resolve, $reject) use ($request, $next) {
             $this->kernel->execute(function () use ($resolve, $reject, $request, $next) {
                 try {
-                    $response = (yield $this->middleware->process($request, new RecoilWrappedDelegate($next)));
+                    $response = $this->middleware->process($request, new RecoilWrappedDelegate($next));
+                    if ($response instanceof ResponseInterface) {
+                        $response = Promise\resolve($response);
+                    }
+                    $response = (yield $response);
                     $resolve($response);
                 } catch (Throwable $throwable) {
                     $reject($throwable);
@@ -46,7 +57,7 @@ final class PSR15Middleware
         });
     }
 
-    private function buildYieldingMiddleware(string $middleware, array $arguments)
+    private function buildYieldingMiddleware($middleware, array $arguments, callable $func)
     {
         if (!is_subclass_of($middleware, PSR15MiddlewareInterface::class)) {
             throw new \Exception('Not a PSR15 middleware');
@@ -75,7 +86,7 @@ final class PSR15Middleware
         $FQCN = implode('\\', $namespace) . '\\' . $newClassName;
         $code = str_replace('class ' . $className, 'class ' . $newClassName, $code);
         eval($code);
-        return new $FQCN(...$arguments);
+        return $func(new $FQCN(...$arguments));
     }
 
     private function iterateStmts(array $stmts): array
