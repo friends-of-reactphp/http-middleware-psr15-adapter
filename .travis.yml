@@ -11,9 +11,6 @@ php:
   - 7.2
   - nightly
 
-# lock distro so new future defaults will not break the build
-dist: trusty
-
 # also test lowest dependencies on PHP 7
 matrix:
   include:
