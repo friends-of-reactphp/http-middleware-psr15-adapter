@@ -2,7 +2,7 @@
 
 namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 
-use Interop\Http\ServerMiddleware\MiddlewareInterface as PSR15MiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Expr\Yield_;
@@ -44,7 +44,7 @@ final class PSR15Middleware
         return new Promise\Promise(function ($resolve, $reject) use ($request, $next) {
             $this->kernel->execute(function () use ($resolve, $reject, $request, $next) {
                 try {
-                    $response = $this->middleware->process($request, new RecoilWrappedDelegate($next));
+                    $response = $this->middleware->process($request, new RecoilWrappedRequestHandler($next));
                     if ($response instanceof ResponseInterface) {
                         $response = Promise\resolve($response);
                     }
@@ -113,7 +113,7 @@ final class PSR15Middleware
         }
 
         if ($stmt instanceof MethodCall) {
-            if ($stmt->var instanceof Variable && $stmt->var->name == 'delegate' && $stmt->name == 'process') {
+            if ($stmt->var instanceof Variable && $stmt->var->name == 'handler' && $stmt->name == 'handle') {
                 return new Yield_($stmt);
             }
             $stmt->var = $this->checkStmt($stmt->var);

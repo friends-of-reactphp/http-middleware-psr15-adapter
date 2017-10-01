@@ -2,14 +2,14 @@
 
 namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 
-use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use function React\Promise\resolve;
 
 /**
  * @internal
  */
-final class RecoilWrappedDelegate implements DelegateInterface
+final class RecoilWrappedRequestHandler implements RequestHandlerInterface
 {
     /**
      * @var callable
@@ -17,14 +17,14 @@ final class RecoilWrappedDelegate implements DelegateInterface
     private $next;
 
     /**
-     * @param callable $wrappedDelegate
+     * @param callable $next
      */
     public function __construct(callable $next)
     {
         $this->next = $next;
     }
 
-    public function process(ServerRequestInterface $request)
+    public function handle(ServerRequestInterface $request)
     {
         $next = $this->next;
         return (yield resolve($next($request)));
