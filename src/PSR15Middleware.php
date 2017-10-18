@@ -2,7 +2,7 @@
 
 namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 
-use Interop\Http\ServerMiddleware\MiddlewareInterface as PSR15MiddlewareInterface;
+use Interop\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Expr\Yield_;
@@ -13,6 +13,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
 use React\Promise;
 use Recoil\React\ReactKernel;
+use Throwable;
 
 final class PSR15Middleware
 {
@@ -26,7 +27,7 @@ final class PSR15Middleware
      */
     private $middleware;
 
-    public function __construct(LoopInterface $loop, $middleware, array $arguments = [], callable $func = null)
+    public function __construct(LoopInterface $loop, string $middleware, array $arguments = [], callable $func = null)
     {
         if ($func === null) {
             $func = function ($middleware) {
@@ -38,18 +39,18 @@ final class PSR15Middleware
         $this->middleware = $this->buildYieldingMiddleware($middleware, $arguments, $func);
     }
 
-    public function __invoke(ServerRequestInterface $request, $next)
+    public function __invoke(ServerRequestInterface $request, callable $next): Promise\PromiseInterface
     {
         return new Promise\Promise(function ($resolve, $reject) use ($request, $next) {
             $this->kernel->execute(function () use ($resolve, $reject, $request, $next) {
                 try {
-                    $response = $this->middleware->process($request, new RecoilWrappedDelegate($next));
+                    $response = $this->middleware->process($request, new RecoilWrappedRequestHandler($next));
                     if ($response instanceof ResponseInterface) {
                         $response = Promise\resolve($response);
                     }
                     $response = (yield $response);
                     $resolve($response);
-                } catch (\Throwable $throwable) {
+                } catch (Throwable $throwable) {
                     $reject($throwable);
                 }
             });
@@ -65,6 +66,7 @@ final class PSR15Middleware
         foreach (get_declared_classes() as $class) {
             if (strpos($class, 'ComposerAutoloaderInit') === 0) {
                 $file = $class::getLoader()->findFile($middleware);
+                break;
             }
         }
 
@@ -87,7 +89,7 @@ final class PSR15Middleware
         return $func(new $FQCN(...$arguments));
     }
 
-    private function iterateStmts($stmts)
+    private function iterateStmts(array $stmts): array
     {
         foreach ($stmts as &$stmt) {
             if (isset($stmt->stmts)) {
@@ -111,7 +113,7 @@ final class PSR15Middleware
         }
 
         if ($stmt instanceof MethodCall) {
-            if ($stmt->var instanceof Variable && $stmt->var->name == 'delegate' && $stmt->name == 'process') {
+            if ($stmt->var instanceof Variable && $stmt->var->name == 'handler' && $stmt->name == 'handle') {
                 return new Yield_($stmt);
             }
             $stmt->var = $this->checkStmt($stmt->var);
