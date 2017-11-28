@@ -9,7 +9,7 @@ use function React\Promise\resolve;
 /**
  * @internal
  */
-final class RecoilWrappedRequestHandler implements RequestHandlerInterface
+final class RecoilWrappedRequestHandler
 {
     /**
      * @var callable

@@ -6,6 +6,8 @@ use Interop\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Expr\Yield_;
+use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 use Psr\Http\Message\ResponseInterface;
@@ -92,6 +94,15 @@ final class PSR15Middleware
     private function iterateStmts(array $stmts): array
     {
         foreach ($stmts as &$stmt) {
+            if ($stmt instanceof Class_) {
+                $stmt->implements = [];
+            }
+
+            if ($stmt instanceof ClassMethod && $stmt->name === 'process') {
+                $stmt->returnType = null;
+                $stmt->params[1]->type = null;
+            }
+
             if (isset($stmt->stmts)) {
                 $stmt->stmts = $this->iterateStmts($stmt->stmts);
             }

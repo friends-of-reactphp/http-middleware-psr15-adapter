@@ -7,7 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^7.0",
-        "http-interop/http-middleware": "^0.5",
+        "http-interop/http-server-middleware": "^1.0",
         "recoil/react": "^1.0",
         "recoil/recoil": "^1.0",
         "nikic/php-parser": "^3.1"
