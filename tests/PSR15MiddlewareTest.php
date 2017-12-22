@@ -7,7 +7,7 @@ use FriendsOfReact\Http\Middleware\Psr15Adapter\PSR15Middleware;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use React\EventLoop\Factory;
-use React\Http\ServerRequest;
+use React\Http\Io\ServerRequest;
 use RingCentral\Psr7\Response;
 
 final class PSR15MiddlewareTest extends TestCase
