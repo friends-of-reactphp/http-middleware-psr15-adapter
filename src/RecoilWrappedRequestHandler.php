@@ -2,7 +2,6 @@
 
 namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 
-use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use function React\Promise\resolve;
 
