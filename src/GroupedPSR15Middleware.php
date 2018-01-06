@@ -27,7 +27,7 @@ final class GroupedPSR15Middleware
         $this->kernel = ReactKernel::create($loop);
     }
 
-    public function add(string $middleware, array $arguments = [], callable $func = null)
+    public function withMiddleware(string $middleware, array $arguments = [], callable $func = null)
     {
         if ($func === null) {
             $func = function ($middleware) {
@@ -35,9 +35,10 @@ final class GroupedPSR15Middleware
             };
         }
 
-        $this->middleware[] = $func(YieldingMiddlewareFactory::construct($middleware, $arguments));
+        $clone = clone $this;
+        $clone->middleware[] = $func(YieldingMiddlewareFactory::construct($middleware, $arguments));
 
-        return $this;
+        return $clone;
     }
 
     public function __invoke(ServerRequestInterface $request, callable $next): Promise\PromiseInterface
