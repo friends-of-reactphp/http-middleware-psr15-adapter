@@ -3,13 +3,6 @@
 namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 
 use Interop\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
-use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Expr\Variable;
-use PhpParser\Node\Expr\Yield_;
-use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\ParserFactory;
-use PhpParser\PrettyPrinter\Standard;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use React\EventLoop\LoopInterface;
@@ -38,7 +31,7 @@ final class PSR15Middleware
         }
 
         $this->kernel = ReactKernel::create($loop);
-        $this->middleware = $this->buildYieldingMiddleware($middleware, $arguments, $func);
+        $this->middleware = $func(YieldingMiddlewareFactory::construct($middleware, $arguments));
     }
 
     public function __invoke(ServerRequestInterface $request, callable $next): Promise\PromiseInterface
@@ -57,80 +50,5 @@ final class PSR15Middleware
                 }
             });
         });
-    }
-
-    private function buildYieldingMiddleware($middleware, array $arguments, callable $func)
-    {
-        if (!is_subclass_of($middleware, PSR15MiddlewareInterface::class)) {
-            throw new \Exception('Not a PSR15 middleware');
-        }
-
-        foreach (get_declared_classes() as $class) {
-            if (strpos($class, 'ComposerAutoloaderInit') === 0) {
-                $file = $class::getLoader()->findFile($middleware);
-                break;
-            }
-        }
-
-        if (!isset($file)) {
-            throw new \Exception('Could not find composer loader');
-        }
-
-        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
-        $stmts = $parser->parse(file_get_contents($file));
-        $stmts = $this->iterateStmts($stmts);
-        $prettyPrinter = new Standard();
-        $code = $prettyPrinter->prettyPrint($stmts);
-
-        $namespace = explode('\\', $middleware);
-        $className = array_pop($namespace);
-        $newClassName = str_replace('.', '_', uniqid($className . '_', true));
-        $FQCN = implode('\\', $namespace) . '\\' . $newClassName;
-        $code = str_replace('class ' . $className, 'class ' . $newClassName, $code);
-        eval($code);
-        return $func(new $FQCN(...$arguments));
-    }
-
-    private function iterateStmts(array $stmts): array
-    {
-        foreach ($stmts as &$stmt) {
-            if ($stmt instanceof Class_) {
-                $stmt->implements = [];
-            }
-
-            if ($stmt instanceof ClassMethod && $stmt->name === 'process') {
-                $stmt->returnType = null;
-                $stmt->params[1]->type = null;
-            }
-
-            if (isset($stmt->stmts)) {
-                $stmt->stmts = $this->iterateStmts($stmt->stmts);
-            }
-
-            $stmt = $this->checkStmt($stmt);
-        }
-        return $stmts;
-    }
-
-    private function checkStmt($stmt)
-    {
-        if (isset($stmt->stmts)) {
-            $stmt->stmts = $this->iterateStmts($stmt->stmts);
-        }
-
-        if (isset($stmt->expr)) {
-            $stmt->expr = $this->checkStmt($stmt->expr);
-            return $stmt;
-        }
-
-        if ($stmt instanceof MethodCall) {
-            if ($stmt->var instanceof Variable && $stmt->var->name == 'handler' && $stmt->name == 'handle') {
-                return new Yield_($stmt);
-            }
-            $stmt->var = $this->checkStmt($stmt->var);
-            return $stmt;
-        }
-
-        return $stmt;
     }
 }
