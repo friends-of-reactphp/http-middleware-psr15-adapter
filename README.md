@@ -39,6 +39,32 @@ $server = new Server(new MiddlewareRunner([
 ]));
 ```
 
+# Grouped Usage
+
+When using more then one PSR-15 in a row the `GroupedPSR15Middleware` is more performing than using multiple `PSR15Middleware`. Consider the 
+following example where we add [`middlewares/cache`](https://github.com/middlewares/cache) for expires headers:
+
+```php
+$loop = Factory::create(); 
+$server = new Server(new MiddlewareRunner([
+    /** Other middleware */
+    (new GroupedPSR15Middleware($loop)->withMiddleware( 
+        Redirect::class,
+        [
+            ['/old-url' => '/new-url']
+        ],
+        function ($redirectMiddleware) {
+            return $redirectMiddleware
+                ->permanent(false)
+                ->query(false)
+                ->method(['GET', 'POST'])
+            ;
+        }
+    )->withMiddleware(Expires::class),
+    /** Other middleware */
+]));
+```
+
 # Warning
 
 This adapter rewrite the code of the PSR-15 middleware during the constructor phase, wrapping all `$delegate->process($request)`
