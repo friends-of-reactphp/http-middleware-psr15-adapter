@@ -17,7 +17,7 @@ and using the callback to call several methods on the redirect middleware to cha
 
 ```php
 $loop = Factory::create(); 
-$server = new Server(new MiddlewareRunner([
+$server = new Server([
     /** Other middleware */
     new PSR15Middleware(
         $loop, // The react/event-loop (required) 
@@ -36,7 +36,33 @@ $server = new Server(new MiddlewareRunner([
         }
     ),
     /** Other middleware */
-]));
+]);
+```
+
+# Grouped Usage
+
+When using more then one PSR-15 in a row the `GroupedPSR15Middleware` is more performing than using multiple `PSR15Middleware`. Consider the 
+following example where we add [`middlewares/cache`](https://github.com/middlewares/cache) for expires headers:
+
+```php
+$loop = Factory::create(); 
+$server = new Server([
+    /** Other middleware */
+    (new GroupedPSR15Middleware($loop))->withMiddleware( 
+        Redirect::class,
+        [
+            ['/old-url' => '/new-url']
+        ],
+        function ($redirectMiddleware) {
+            return $redirectMiddleware
+                ->permanent(false)
+                ->query(false)
+                ->method(['GET', 'POST'])
+            ;
+        }
+    )->withMiddleware(Expires::class),
+    /** Other middleware */
+]);
 ```
 
 # Warning
