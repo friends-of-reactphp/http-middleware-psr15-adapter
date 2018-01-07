@@ -17,7 +17,7 @@ and using the callback to call several methods on the redirect middleware to cha
 
 ```php
 $loop = Factory::create(); 
-$server = new Server(new MiddlewareRunner([
+$server = new Server([
     /** Other middleware */
     new PSR15Middleware(
         $loop, // The react/event-loop (required) 
@@ -36,7 +36,7 @@ $server = new Server(new MiddlewareRunner([
         }
     ),
     /** Other middleware */
-]));
+]);
 ```
 
 # Grouped Usage
@@ -46,7 +46,7 @@ following example where we add [`middlewares/cache`](https://github.com/middlewa
 
 ```php
 $loop = Factory::create(); 
-$server = new Server(new MiddlewareRunner([
+$server = new Server([
     /** Other middleware */
     (new GroupedPSR15Middleware($loop)->withMiddleware( 
         Redirect::class,
@@ -62,7 +62,7 @@ $server = new Server(new MiddlewareRunner([
         }
     )->withMiddleware(Expires::class),
     /** Other middleware */
-]));
+]);
 ```
 
 # Warning
