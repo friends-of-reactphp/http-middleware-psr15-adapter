@@ -48,7 +48,7 @@ following example where we add [`middlewares/cache`](https://github.com/middlewa
 $loop = Factory::create(); 
 $server = new Server([
     /** Other middleware */
-    (new GroupedPSR15Middleware($loop)->withMiddleware( 
+    (new GroupedPSR15Middleware($loop))->withMiddleware( 
         Redirect::class,
         [
             ['/old-url' => '/new-url']
