@@ -2,9 +2,9 @@
 
 namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 
-use Interop\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
 use React\EventLoop\LoopInterface;
 use React\Promise;
 use Recoil\React\ReactKernel;

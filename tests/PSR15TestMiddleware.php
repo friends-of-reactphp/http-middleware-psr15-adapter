@@ -2,10 +2,10 @@
 
 namespace FriendsOfReact\Tests\Http\Middleware\Psr15Adapter;
 
-use Interop\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
-use Interop\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 final class PSR15TestMiddleware implements PSR15MiddlewareInterface
 {

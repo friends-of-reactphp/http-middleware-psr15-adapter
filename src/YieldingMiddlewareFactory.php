@@ -2,7 +2,6 @@
 
 namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 
-use Interop\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Expr\Yield_;
@@ -10,6 +9,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
+use Psr\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
 
 final class YieldingMiddlewareFactory
 {
