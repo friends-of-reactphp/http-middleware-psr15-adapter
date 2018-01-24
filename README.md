@@ -67,6 +67,6 @@ $server = new Server([
 
 # Warning
 
-This adapter rewrite the code of the PSR-15 middleware during the constructor phase, wrapping all `$delegate->process($request)`
+This adapter rewrites the code of the PSR-15 middleware during the constructor phase, wrapping all `$delegate->process($request)`
 calls into a yield `(yield $delegate->process($request))`. This should work for most middleware but cannot be guaranteed for all.
 In case you run into issues please open an issue with the middleware in question you're having problems with.
