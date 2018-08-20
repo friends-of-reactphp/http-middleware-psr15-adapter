@@ -58,7 +58,7 @@ final class YieldingMiddlewareFactory
                 $stmt->implements = [];
             }
 
-            if ($stmt instanceof ClassMethod && $stmt->name === 'process') {
+            if ($stmt instanceof ClassMethod && (string)$stmt->name === 'process') {
                 $stmt->returnType = null;
                 $stmt->params[1]->type = null;
             }
