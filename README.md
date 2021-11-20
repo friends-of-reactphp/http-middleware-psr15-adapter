@@ -2,7 +2,7 @@
 
 [![CI status](https://github.com/friends-of-reactphp/http-middleware-psr15-adapter/workflows/CI/badge.svg)](https://github.com/friends-of-reactphp/http-middleware-psr15-adapter/actions)
 
-Wraps PSR-15 middleware into coroutines using [`RecoilPHP`](https://github.com/recoilphp) making them usable within `react/http` as middleware.
+Wraps PSR-15 middleware using `async` and `await` from `react/async` utilizing fibers making them usable within `react/http` as middleware.
 
 # Install
 
@@ -18,27 +18,13 @@ The following usage example uses [`middlewares/redirect`](https://github.com/mid
 and using the callback to call several methods on the redirect middleware to change it's behavior:
 
 ```php
-$loop = Factory::create(); 
-$server = new Server([
+$server = new Server(
     /** Other middleware */
     new PSR15Middleware(
-        $loop, // The react/event-loop (required) 
-        Redirect::class, // String class name of the middleware (required)
-        [ // Any constructor arguments (optional)
-            ['/old-url' => '/new-url']
-        ],
-        function ($redirectMiddleware) {
-            // This callback is optional, but when used it must return the
-            // instance passed into it, or a clone of it.
-            return $redirectMiddleware
-                ->permanent(false)
-                ->query(false)
-                ->method(['GET', 'POST'])
-            ;
-        }
+        (new Redirect(['/old-url' => '/new-url']))->permanent(false)->query(false)->method(['GET', 'POST'])
     ),
     /** Other middleware */
-]);
+);
 ```
 
 # Grouped Usage
@@ -51,24 +37,10 @@ $loop = Factory::create();
 $server = new Server([
     /** Other middleware */
     (new GroupedPSR15Middleware($loop))->withMiddleware( 
-        Redirect::class,
-        [
-            ['/old-url' => '/new-url']
-        ],
-        function ($redirectMiddleware) {
-            return $redirectMiddleware
-                ->permanent(false)
-                ->query(false)
-                ->method(['GET', 'POST'])
-            ;
-        }
-    )->withMiddleware(Expires::class),
+        (new Redirect(['/old-url' => '/new-url']))->permanent(false)->query(false)->method(['GET', 'POST'])
+    )->withMiddleware(
+        new Expires()
+    ),
     /** Other middleware */
 ]);
 ```
-
-# Warning
-
-This adapter rewrites the code of the PSR-15 middleware during the constructor phase, wrapping all `$delegate->process($request)`
-calls into a yield `(yield $delegate->process($request))`. This should work for most middleware but cannot be guaranteed for all.
-In case you run into issues please open an issue with the middleware in question you're having problems with.

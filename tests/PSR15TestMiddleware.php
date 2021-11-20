@@ -15,6 +15,7 @@ final class PSR15TestMiddleware implements PSR15MiddlewareInterface
         $response = $handler->handle($request);
         $response = $response->withHeader('X-Test', 'passed');
         $response = $response->withBody(stream_for('__DIR__:' . __DIR__ . ';__FILE__:' . __FILE__));
+
         return $response;
     }
 }
