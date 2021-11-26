@@ -1,5 +1,7 @@
 # A PSR-15 middleware adapter for react/http
 
+[![CI status](https://github.com/friends-of-reactphp/http-middleware-psr15-adapter/workflows/CI/badge.svg)](https://github.com/friends-of-reactphp/http-middleware-psr15-adapter/actions)
+
 Wraps PSR-15 middleware into coroutines using [`RecoilPHP`](https://github.com/recoilphp) making them usable within `react/http` as middleware.
 
 # Install
