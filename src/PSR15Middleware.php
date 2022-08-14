@@ -5,50 +5,17 @@ namespace FriendsOfReact\Http\Middleware\Psr15Adapter;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface as PSR15MiddlewareInterface;
-use React\EventLoop\LoopInterface;
-use React\Promise;
-use Recoil\React\ReactKernel;
-use Throwable;
+use React\Promise\PromiseInterface;
+use function React\Async\async;
 
 final class PSR15Middleware
 {
-    /**
-     * @var ReactKernel
-     */
-    private $kernel;
+    public function __construct(private PSR15MiddlewareInterface $middleware) {}
 
-    /**
-     * @var PSR15MiddlewareInterface
-     */
-    private $middleware;
-
-    public function __construct(LoopInterface $loop, string $middleware, array $arguments = [], callable $func = null)
+    public function __invoke(ServerRequestInterface $request, callable $next): PromiseInterface
     {
-        if ($func === null) {
-            $func = function ($middleware) {
-                return $middleware;
-            };
-        }
-
-        $this->kernel = ReactKernel::create($loop);
-        $this->middleware = $func(YieldingMiddlewareFactory::construct($middleware, $arguments));
-    }
-
-    public function __invoke(ServerRequestInterface $request, callable $next): Promise\PromiseInterface
-    {
-        return new Promise\Promise(function ($resolve, $reject) use ($request, $next) {
-            $this->kernel->execute(function () use ($resolve, $reject, $request, $next) {
-                try {
-                    $response = $this->middleware->process($request, new RecoilWrappedRequestHandler($next));
-                    if ($response instanceof ResponseInterface) {
-                        $response = Promise\resolve($response);
-                    }
-                    $response = (yield $response);
-                    $resolve($response);
-                } catch (Throwable $throwable) {
-                    $reject($throwable);
-                }
-            });
-        });
+        return async(
+            fn (): ResponseInterface => $this->middleware->process($request, new AwaitRequestHandler($next))
+        )($request, $next);
     }
 }
